@@ -1,5 +1,11 @@
 package com.houseforest.moneyrich;
 
+import javafx.geometry.Pos;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.net.HttpURLConnection;
 import java.util.LinkedList;
 
@@ -11,20 +17,7 @@ public class Depot {
     private static final String loginWebsiteURL = "https://www.onvista.de/login.html";
     private static final String depotWebsiteURL = "http://my.onvista.de/musterdepot/";
 
-    public class Share {
-        public String name;
-        public double price;
-    }
-
-    public class Position {
-        public Share share;
-        public int count;
-
-        public double getCombinedValue() {
-            return share.price * count;
-        }
-    }
-
+    private double cash;
     private LinkedList<Position> positions;
     private String cookie;
 
@@ -34,6 +27,20 @@ public class Depot {
 
     public LinkedList<Position> getPositions() {
         return positions;
+    }
+
+    public double getCash() {
+        return cash;
+    }
+
+    public double getCombinedPositionsValue() {
+        double combined = 0.0;
+        for (Position pos : positions) combined += pos.getCombinedValue();
+        return combined;
+    }
+
+    public double getValue() {
+        return cash + getCombinedPositionsValue();
     }
 
     public void login(Browser browser, String username, String password) {
@@ -78,7 +85,58 @@ public class Depot {
         connection.setRequestProperty("Cookie", this.cookie);
         String depotSiteSource = browser.sendGetRequest(connection);
 
-        // TODO: Extract depot position data.
-        System.out.println(depotSiteSource);
+        // Traverse DOM.
+        Document doc = Jsoup.parse(depotSiteSource);
+        Element dashboard = doc.getElementsByClass("DEPOT_KENNZAHLEN_02").get(0);
+        Element table = doc.getElementById("myoPortfolioPageTabNavigationBoxAction");
+        Elements rows = table.getElementsByClass("HAUPTZEILE");
+
+        // Parse depot dashboard.
+        parseDashboard(dashboard);
+
+        // Parse positions.
+        for (Element row : rows) {
+            positions.add(parseTableRow(row));
+        }
+    }
+
+    private void parseDashboard(Element dashboard) {
+        cash = Main.parsePrice(dashboard.getElementsByClass("ZAHL").get(1).text());
+    }
+
+    private Position parseTableRow(Element row) {
+
+        // Position to return.
+        Position pos = new Position();
+
+        // Parse count.
+        pos.count = Integer.parseInt(row.getElementsByClass("ZAHL").get(0).text());
+
+        // Parse name.
+        pos.share.name = row.getElementsByClass("TEXT").get(0)
+                .getElementsByTag("strong").get(0)
+                .text().replaceAll("<br>", "");
+
+
+        // Parse share value.
+        pos.share.value = Main.parsePrice(
+                row.getElementsByClass("TEXT").get(2)
+                        .getElementsByTag("span").get(0)
+                        .text()
+        );
+
+        return pos;
+    }
+
+    public void dump() {
+        System.out.println("\n********* Depot Information *********");
+        for (Position pos : positions) System.out.println("[Position] " + pos.toString());
+        System.out.println("-+------------------------+-");
+        System.out.println("Positions Total:\t" + Main.formatPrice(getCombinedPositionsValue()));
+        System.out.println("-+------------------------+-");
+        System.out.println("Available Cash:\t\t" + Main.formatPrice(cash));
+        System.out.println("-+------------------------+-");
+        System.out.println("Depot Total:\t\t" + Main.formatPrice(getValue()));
+        System.out.println("*************************************");
     }
 }

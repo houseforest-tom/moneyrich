@@ -1,10 +1,9 @@
 package com.houseforest.moneyrich;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
+import java.text.DecimalFormat;
 
 public class Main {
 
@@ -18,21 +17,36 @@ public class Main {
         browser = new Browser(java.nio.charset.StandardCharsets.UTF_8.name());
         depot = new Depot();
 
+        // Prompt user login data.
         try {
             System.out.println("Welcome to the moneyrich Depot Manager!");
-            Console console = System.console();
             username = readLine("Username: ");
             password = String.valueOf(readPassword("Password: "));
-            depot.login(browser, username, password);
-        } catch (Exception e) {
+        }
+        catch(IOException e){
             e.printStackTrace();
         }
 
+        // Connect to depot and print current status.
+        depot.login(browser, username, password);
         depot.update(browser);
+        depot.dump();
     }
 
     public static void main(String[] args) {
         new Main();
+    }
+
+    public static String formatPrice(double value) {
+        return new DecimalFormat("#0.00€").format(value);
+    }
+
+    public static double parsePrice(String value) {
+        value = value.trim();
+        value = value.split(" ")[0];            // Stop parsing before first space.
+        value = value.replaceAll("\\.", "");    // Replace separator dots.
+        value = value.replaceAll(",", ".");     // Replace mantissa comma with dot.
+        return Double.parseDouble(value);
     }
 
     private String readLine(String format, Object... args) throws IOException {
