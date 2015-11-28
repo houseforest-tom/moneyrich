@@ -5,11 +5,24 @@ package com.houseforest.moneyrich;
  */
 public class Position {
 
-    public Share share = new Share();
-    public int count = 0;
+    private Share share;
+    private int count;
+
+    public Position(Share share, int count){
+        this.share = share;
+        this.count = count;
+    }
+
+    public Share getShare(){
+        return share;
+    }
+
+    public int getCount(){
+        return count;
+    }
 
     public double getCombinedValue() {
-        return share.value * count;
+        return share.getValue() * count;
     }
 
     @Override

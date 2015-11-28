@@ -95,9 +95,7 @@ public class Browser {
         try {
             connection.setRequestMethod("GET");
             connection.setDoInput(true);
-            return connection.getResponseCode()
-                    + " - " + connection.getResponseMessage()
-                    + ":\n" + readResponse(connection);
+            return readResponse(connection);
         } catch (Exception e) {
             e.printStackTrace();
             return "";
@@ -111,9 +109,7 @@ public class Browser {
             connection.setDoInput(true);
             OutputStream stream = connection.getOutputStream();
             stream.write(data.encode().getBytes(charset));
-            return connection.getResponseCode()
-                    + " - " + connection.getResponseMessage()
-                    + ":\n" + readResponse(connection);
+            return readResponse(connection);
         } catch (Exception e) {
             e.printStackTrace();
             return "";

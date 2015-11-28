@@ -5,11 +5,28 @@ package com.houseforest.moneyrich;
  */
 public class Share {
 
-    public String name = "";
-    public double value = 0.0;
+    private String symbol;
+    private double value;
+
+    public Share(String symbol, double value) {
+        this.symbol = symbol;
+        this.value = value;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
 
     @Override
     public String toString() {
-        return "{ name: " + name + ", value: " + Main.formatPrice(value) + " }";
+        return "{ symbol: " + symbol + ", value: " + Main.formatPrice(value) + " }";
     }
 }

@@ -1,6 +1,5 @@
 package com.houseforest.moneyrich;
 
-import javafx.geometry.Pos;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,6 +7,7 @@ import org.jsoup.select.Elements;
 
 import java.net.HttpURLConnection;
 import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Created by Tom on 27.11.2015.
@@ -106,26 +106,30 @@ public class Depot {
 
     private Position parseTableRow(Element row) {
 
-        // Position to return.
-        Position pos = new Position();
-
         // Parse count.
-        pos.count = Integer.parseInt(row.getElementsByClass("ZAHL").get(0).text());
+        int count = Integer.parseInt(row.getElementsByClass("ZAHL").get(0).text());
 
-        // Parse name.
-        pos.share.name = row.getElementsByClass("TEXT").get(0)
-                .getElementsByTag("strong").get(0)
-                .text().replaceAll("<br>", "");
+        // Parse link.
+        String href = row.getElementsByClass("TEXT").get(0)
+                .getElementsByTag("a").get(0)
+                .attr("href").trim();
 
 
         // Parse share value.
-        pos.share.value = Main.parsePrice(
+        double value = Main.parsePrice(
                 row.getElementsByClass("TEXT").get(2)
                         .getElementsByTag("span").get(0)
                         .text()
         );
 
-        return pos;
+        for(Map.Entry<String, String> symlink : Main.shareLinks.entrySet()){
+            if(symlink.getValue().equals(href)){
+                return new Position(new Share(symlink.getKey(), value), count);
+            }
+        }
+
+        System.out.println("Error: No matching symbol found for link: " + href);
+        return null;
     }
 
     public void dump() {
